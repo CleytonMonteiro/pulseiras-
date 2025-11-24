@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AABB ARACAJU - Gestão Completa</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>AABB<span class="highlight">ARACAJU</span></h1>
+            <p>Controle de Estoque de Pulseiras</p>
+        </header>
+
+        <section class="stock-card">
+            <div class="stock-info">
+                <span class="material-icons-round">inventory_2</span>
+                <div>
+                    <span>Saldo em Estoque</span>
+                    <strong id="stockBalance">Calculando...</strong>
+                </div>
+            </div>
+            <button onclick="window.print()" class="btn-print" title="Imprimir Relatório">
+                <span class="material-icons-round">print</span>
+            </button>
+        </section>
+
+        <section class="card no-print">
+            <h2 id="formTitle">Novo Lançamento</h2>
+            <form id="salesForm">
+                <input type="hidden" id="editId"> <div class="input-group">
+                    <label>Data</label>
+                    <input type="date" id="dateInput" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Qtd. Pulseiras</label>
+                    <input type="number" id="quantityInput" min="1" value="1" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Tipo de Operação</label>
+                    <select id="paymentType" required>
+                        <option value="" disabled selected>Selecione...</option>
+                        <option value="dinheiro">Saída - Dinheiro</option>
+                        <option value="cartao">Saída - Cartão</option>
+                        <option value="pix">Saída - PIX</option>
+                        <option value="cortesia">Saída - Cortesia</option>
+                        <option value="estoque" style="font-weight: bold; color: green;">+ Entrada de Estoque</option>
+                    </select>
+                </div>
+
+                <div class="input-group hidden" id="directorGroup">
+                    <label>Nome do Diretor (Autorização)</label>
+                    <input type="text" id="directorInput" placeholder="Quem liberou?">
+                </div>
+
+                <button type="submit" class="btn-primary" id="btnSubmit">Registrar</button>
+                <button type="button" id="btnCancelEdit" class="btn-secondary hidden" style="margin-top: 10px; width: 100%;">Cancelar Edição</button>
+            </form>
+        </section>
+
+        <section class="card summary-section">
+            <div class="filter-header no-print">
+                <h2>Resumo do Período</h2>
+                <div class="date-filter">
+                    <div class="date-input-wrapper">
+                        <small>De:</small>
+                        <input type="date" id="dateStart">
+                    </div>
+                    <div class="date-input-wrapper">
+                        <small>Até:</small>
+                        <input type="date" id="dateEnd">
+                    </div>
+                    <button id="btnFilter" class="btn-secondary material-icons-round">search</button>
+                </div>
+            </div>
+
+            <div class="total-highlight">
+                <span class="label">Total Saídas no Período</span>
+                <strong id="totalGeral">0</strong>
+            </div>
+
+            <div class="dashboard">
+                <div class="stat-box">
+                    <span class="material-icons-round">confirmation_number</span>
+                    <p>Dinheiro</p>
+                    <strong id="resDinheiro">0</strong>
+                </div>
+                <div class="stat-box">
+                    <span class="material-icons-round">sell</span>
+                    <p>Cartão</p>
+                    <strong id="resCartao">0</strong>
+                </div>
+                <div class="stat-box">
+                    <span class="material-icons-round">local_activity</span>
+                    <p>PIX</p>
+                    <strong id="resPix">0</strong>
+                </div>
+                <div class="stat-box alert">
+                    <span class="material-icons-round">loyalty</span>
+                    <p>Cortesias</p>
+                    <strong id="resCortesia">0</strong>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <h3>Detalhamento</h3>
+                <table id="reportTable">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Tipo</th>
+                            <th>Qtd</th>
+                            <th>Detalhe</th>
+                            <th class="no-print">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

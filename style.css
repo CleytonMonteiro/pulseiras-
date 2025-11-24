@@ -1,0 +1,383 @@
+:root {
+    --primary: #6366f1;       /* Roxo Principal */
+    --primary-hover: #4f46e5;
+    --success: #10b981;       /* Verde Sucesso */
+    --warning: #f59e0b;       /* Amarelo Alerta */
+    --danger: #ef4444;        /* Vermelho Erro */
+    --bg: #f3f4f6;            /* Fundo da Página */
+    --card-bg: #ffffff;       /* Fundo dos Cards */
+    --text: #1f2937;          /* Texto Escuro */
+    --text-light: #6b7280;    /* Texto Claro */
+    --radius: 12px;           /* Arredondamento */
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
+}
+
+/* --- CABEÇALHO --- */
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h1 { margin: 0; font-size: 1.8rem; }
+.highlight { color: var(--primary); }
+p { color: var(--text-light); margin-top: 5px; }
+
+/* --- CARDS GERAIS --- */
+.card {
+    background: var(--card-bg);
+    padding: 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+}
+
+h2 { font-size: 1.2rem; margin-top: 0; margin-bottom: 15px; }
+
+/* --- CARD DE ESTOQUE (SALDO ATUAL) --- */
+.stock-card {
+    background: #1f2937;
+    color: white;
+    padding: 15px 24px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow);
+}
+
+.stock-info {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.stock-info span.material-icons-round {
+    font-size: 2.5rem;
+    color: var(--success);
+}
+
+.stock-info div {
+    display: flex;
+    flex-direction: column;
+}
+
+.stock-info span { font-size: 0.9rem; opacity: 0.8; }
+.stock-info strong { font-size: 1.5rem; }
+
+/* Botão de Impressão */
+.btn-print {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    padding: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-print:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* --- FORMULÁRIOS E INPUTS --- */
+.input-group { margin-bottom: 15px; }
+
+label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 5px;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: 0.2s;
+    background: #fff;
+}
+
+input:focus, select:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Utilitários */
+.hidden { display: none !important; }
+
+/* --- BOTÕES --- */
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+
+/* Botão Amarelo para Edição */
+.btn-warning {
+    background: var(--warning) !important;
+    color: white !important;
+}
+
+.btn-secondary {
+    background: #e5e7eb;
+    color: var(--text);
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* --- FILTROS E DASHBOARD --- */
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.date-filter {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.date-input-wrapper small {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-light);
+    margin-bottom: 2px;
+}
+
+.date-input-wrapper input {
+    padding: 6px;
+    font-size: 0.9rem;
+}
+
+/* Destaque do Total no Período */
+.total-highlight {
+    background: var(--primary);
+    color: white;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+}
+.total-highlight .label { display: block; font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px; }
+.total-highlight strong { font-size: 2.5rem; line-height: 1; }
+
+/* Grid dos Cards Pequenos */
+.dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.stat-box {
+    background: #f9fafb;
+    padding: 15px 10px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+}
+
+.stat-box span { font-size: 24px; color: var(--text-light); margin-bottom: 5px; display: block; }
+.stat-box p { margin: 0; font-size: 0.8rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-box strong { font-size: 1.2rem; color: var(--text); display: block; margin-top: 5px; }
+.stat-box.alert span { color: var(--danger); }
+
+/* --- TABELA DE RELATÓRIO --- */
+.table-container {
+    margin-top: 10px;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+th {
+    text-align: left;
+    padding: 12px 8px;
+    border-bottom: 2px solid #e5e7eb;
+    color: var(--text-light);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+/* Botões de Ação */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-icon {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.btn-icon span { font-size: 18px; }
+
+.btn-icon.edit {
+    color: var(--primary);
+    background: #e0e7ff;
+}
+.btn-icon.edit:hover { background: #c7d2fe; }
+
+.btn-icon.delete {
+    color: var(--danger);
+    background: #fee2e2;
+}
+.btn-icon.delete:hover { background: #fecaca; }
+
+/* --- MODO DE IMPRESSÃO --- */
+@media print {
+    /* Reset Geral */
+    body { 
+        background: white; 
+        padding: 0; 
+        color: black;
+        font-size: 12pt;
+    }
+
+    /* Esconde elementos desnecessários no papel */
+    .no-print, 
+    .btn-print, 
+    header p, 
+    .stock-card, 
+    #salesForm,
+    .btn-primary,
+    .btn-secondary,
+    .filter-header { 
+        display: none !important; 
+    }
+
+    /* Ajuste de container */
+    .container { 
+        max-width: 100%; 
+        width: 100%; 
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Remove sombras e bordas */
+    .card, .total-highlight { 
+        box-shadow: none; 
+        border: none;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+    }
+
+    /* Cabeçalho Limpo */
+    header h1 { 
+        font-size: 18pt; 
+        color: black; 
+        text-align: left;
+        border-bottom: 2px solid black;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    header h1 span { color: black; }
+
+    /* Totalizador */
+    .total-highlight {
+        border: 1px solid #000;
+        color: black;
+        text-align: left;
+        padding: 10px;
+        margin-bottom: 20px;
+        background: #f0f0f0 !important;
+        -webkit-print-color-adjust: exact; 
+        print-color-adjust: exact;
+    }
+    .total-highlight .label { color: black; display: inline-block; margin-right: 10px; }
+    .total-highlight strong { font-size: 14pt; display: inline-block; }
+
+    /* Dashboard */
+    .dashboard {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 20px;
+    }
+    .stat-box {
+        border: none;
+        padding: 0;
+        background: transparent;
+        text-align: left;
+    }
+    .stat-box span { display: none; }
+    .stat-box p { font-size: 10pt; font-weight: bold; color: black; }
+    .stat-box strong { font-size: 12pt; color: black; }
+
+    /* Tabela Otimizada */
+    .table-container { margin-top: 0; }
+    table { font-size: 10pt; width: 100%; }
+    
+    th { 
+        border-bottom: 2px solid #000; 
+        color: black; 
+        padding: 5px;
+    }
+    
+    td { 
+        border-bottom: 1px solid #ccc; 
+        color: black;
+        padding: 5px;
+    }
+
+    /* CORREÇÃO: Apenas as propriedades válidas */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
