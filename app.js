@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-// --- 1. CONFIGURAÇÃO DO FIREBASE ---
+// CONFIGURAÇÃO
 const firebaseConfig = {
     apiKey: "AIzaSyCzd2fMAI6rGuSitFfgGcbjN8Wq22IJwz4",
     authDomain: "pulseiratrack.firebaseapp.com",
@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// --- 2. ELEMENTOS DO DOM ---
+// ELEMENTOS
 const salesForm = document.getElementById('salesForm');
 const paymentType = document.getElementById('paymentType');
 const directorGroup = document.getElementById('directorGroup');
@@ -22,36 +22,37 @@ const directorInput = document.getElementById('directorInput');
 const btnFilter = document.getElementById('btnFilter');
 const dateStart = document.getElementById('dateStart');
 const dateEnd = document.getElementById('dateEnd');
-const tableBody = document.querySelector('#reportTable tbody');
 const editIdInput = document.getElementById('editId');
 const btnSubmit = document.getElementById('btnSubmit');
 const btnCancelEdit = document.getElementById('btnCancelEdit');
 const formTitle = document.getElementById('formTitle');
 const lblDirector = document.querySelector('#directorGroup label');
 
-// Define datas iniciais como "Hoje"
+// Inputs de Quantidade
+const qtdAdultoInput = document.getElementById('qtdAdultoInput');
+const qtdInfantilInput = document.getElementById('qtdInfantilInput');
+
+// Tabelas Separadas
+const tbodyAdulto = document.querySelector('#tableAdulto tbody');
+const tbodyInfantil = document.querySelector('#tableInfantil tbody');
+
+// Data Inicial
 const hoje = new Date();
 document.getElementById('dateInput').valueAsDate = hoje;
 dateStart.valueAsDate = hoje;
 dateEnd.valueAsDate = hoje;
 
-// --- 3. LÓGICA VISUAL (FORMULÁRIO) ---
-
-// Mostrar/Ocultar Campo de Descrição (Diretor ou Obs de Estoque)
+// Lógica de Campos
 paymentType.addEventListener('change', (e) => {
     const tipo = e.target.value;
-    
-    // Mostra o campo se for Cortesia OU Estoque
     if(tipo === 'cortesia' || tipo === 'estoque') {
         directorGroup.classList.remove('hidden');
         directorInput.setAttribute('required', 'true');
-        
-        // Customiza o texto para fazer sentido
         if(tipo === 'estoque') {
             lblDirector.innerText = 'Observação (Ex: Saldo Inicial)';
-            directorInput.placeholder = 'Descrição da entrada...';
+            directorInput.placeholder = 'Descrição...';
         } else {
-            lblDirector.innerText = 'Nome do Diretor (Autorização)';
+            lblDirector.innerText = 'Nome do Diretor';
             directorInput.placeholder = 'Quem liberou?';
         }
     } else {
@@ -61,242 +62,242 @@ paymentType.addEventListener('change', (e) => {
     }
 });
 
-// --- 4. SALVAR OU EDITAR (CRUD) ---
+// --- SALVAR ---
 salesForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const date = document.getElementById('dateInput').value;
-    const quantity = parseInt(document.getElementById('quantityInput').value);
+    const qtdA = parseInt(qtdAdultoInput.value) || 0;
+    const qtdI = parseInt(qtdInfantilInput.value) || 0;
     const type = paymentType.value;
     const director = directorInput.value;
-    const idToEdit = editIdInput.value; // Se tiver ID, é edição
+    const idToEdit = editIdInput.value;
 
-    // Prepara o objeto para salvar
+    if(qtdA === 0 && qtdI === 0) {
+        alert("Preencha a quantidade de pelo menos um tipo.");
+        return;
+    }
+
     const dados = {
         data: date,
-        qtd: quantity,
+        qtdAdulto: qtdA,
+        qtdInfantil: qtdI,
         tipo: type,
-        // Salva a descrição se for cortesia OU estoque
         diretor: (type === 'cortesia' || type === 'estoque') ? director : null,
-        created_at: new Date() // Atualiza data de modificação
+        created_at: new Date()
     };
 
     try {
         if (idToEdit) {
-            // MODO EDIÇÃO (UPDATE)
             await updateDoc(doc(db, "vendas", idToEdit), dados);
-            alert("Registro atualizado com sucesso!");
-            resetFormMode(); // Sai do modo edição
+            alert("Atualizado!");
+            resetFormMode();
         } else {
-            // MODO CRIAÇÃO (CREATE)
             await addDoc(collection(db, "vendas"), dados);
-            alert("Registro salvo!");
+            alert("Salvo!");
             salesForm.reset();
-            // Reseta padrões
             document.getElementById('dateInput').valueAsDate = new Date();
             directorGroup.classList.add('hidden');
+            qtdAdultoInput.value = 0;
+            qtdInfantilInput.value = 0;
         }
-
-        // Atualiza a tela
         carregarResumo(dateStart.value, dateEnd.value);
         calcularEstoqueGeral();
-
     } catch (error) {
-        console.error("Erro ao salvar: ", error);
-        alert("Erro ao processar a solicitação.");
+        console.error(error);
+        alert("Erro ao salvar.");
     }
 });
 
-// --- 5. FUNÇÕES AUXILIARES ---
-
-// Resetar o formulário para o estado inicial
 function resetFormMode() {
     salesForm.reset();
     editIdInput.value = '';
     btnSubmit.innerText = 'Registrar';
-    btnSubmit.classList.remove('btn-warning'); // Remove cor amarela
+    btnSubmit.classList.remove('btn-warning');
     formTitle.innerText = 'Novo Lançamento';
     btnCancelEdit.classList.add('hidden');
     document.getElementById('dateInput').valueAsDate = new Date();
     directorGroup.classList.add('hidden');
+    qtdAdultoInput.value = 0;
+    qtdInfantilInput.value = 0;
 }
 
-// Botão Cancelar Edição
 btnCancelEdit.addEventListener('click', resetFormMode);
 
-// --- 6. CÁLCULO DE ESTOQUE (SALDO GERAL) ---
+// --- ESTOQUE ---
 async function calcularEstoqueGeral() {
-    // Busca TODAS as movimentações do banco (sem filtro de data)
     const q = query(collection(db, "vendas"));
     const querySnapshot = await getDocs(q);
     
-    let entrada = 0;
-    let saida = 0;
+    let entradaA = 0, saidaA = 0;
+    let entradaI = 0, saidaI = 0;
 
     querySnapshot.forEach((doc) => {
         const item = doc.data();
+        const valA = item.qtdAdulto || 0;
+        const valI = item.qtdInfantil || 0;
+
         if (item.tipo === 'estoque') {
-            entrada += item.qtd;
+            entradaA += valA;
+            entradaI += valI;
         } else {
-            // Qualquer outro tipo (Dinheiro, Pix, Cortesia) conta como saída
-            saida += item.qtd;
+            saidaA += valA;
+            saidaI += valI;
         }
     });
 
-    const saldo = entrada - saida;
-    const elSaldo = document.getElementById('stockBalance');
-    elSaldo.innerText = saldo;
+    const saldoA = entradaA - saidaA;
+    const saldoI = entradaI - saidaI;
+
+    const elA = document.getElementById('stockAdulto');
+    const elI = document.getElementById('stockInfantil');
+
+    elA.innerText = saldoA;
+    elI.innerText = saldoI;
     
-    // Formatação visual (Verde se positivo, Vermelho se negativo)
-    if(saldo < 0) {
-        elSaldo.style.color = '#ef4444';
-    } else {
-        elSaldo.style.color = '#10b981';
-    }
+    elA.style.color = saldoA < 0 ? '#ef4444' : '#10b981';
+    elI.style.color = saldoI < 0 ? '#ef4444' : '#3b82f6';
 }
 
-// --- 7. RELATÓRIO E TABELA (COM ORDENAÇÃO DE ESTOQUE) ---
+// --- RELATÓRIO SEPARADO ---
 async function carregarResumo(inicio, fim) {
-    // Busca dados dentro do período selecionado
     const q = query(
         collection(db, "vendas"), 
         where("data", ">=", inicio),
         where("data", "<=", fim),
-        orderBy("data", "desc") // Primeiro ordena por data
+        orderBy("data", "desc")
     );
     
     const querySnapshot = await getDocs(q);
 
-    // Variáveis para o Dashboard
+    // Totais do Dashboard (Financeiro Geral)
     let totais = { dinheiro: 0, cartao: 0, pix: 0, cortesia: 0 };
-    let totalGeralSaida = 0;
-    
-    // 1. Transforma o snapshot em uma lista (array) para poder reordenar via JS
     let listaVendas = [];
+
     querySnapshot.forEach((doc) => {
         listaVendas.push({ id: doc.id, ...doc.data() });
     });
 
-    // 2. ORDENAÇÃO ESPECIAL: Estoque sempre no topo
+    // Ordena: Estoque no topo
     listaVendas.sort((a, b) => {
-        // Se 'a' é estoque e 'b' não é, 'a' vem primeiro
         if (a.tipo === 'estoque' && b.tipo !== 'estoque') return -1;
-        // Se 'b' é estoque e 'a' não é, 'b' vem primeiro
         if (b.tipo === 'estoque' && a.tipo !== 'estoque') return 1;
-        // Caso contrário, mantém a ordem original (que já é data desc)
         return 0;
     });
 
-    // Limpa a tabela antes de preencher
-    tableBody.innerHTML = '';
+    // Limpa as DUAS tabelas
+    tbodyAdulto.innerHTML = '';
+    tbodyInfantil.innerHTML = '';
 
-    // 3. Renderiza a tabela
     listaVendas.forEach((item) => {
-        const id = item.id;
-        
-        // Formata data de "2025-11-24" para "24/11"
         const dataFormatada = item.data.split('-').reverse().slice(0, 2).join('/');
-
-        // Se NÃO for estoque, soma nos totais de saída (Dashboard)
+        const qtdA = item.qtdAdulto || 0;
+        const qtdI = item.qtdInfantil || 0;
+        
+        // Soma no dashboard financeiro (pagamentos)
         if (item.tipo !== 'estoque') {
-            if (totais[item.tipo] !== undefined) totais[item.tipo] += item.qtd;
-            totalGeralSaida += item.qtd;
+            if (totais[item.tipo] !== undefined) totais[item.tipo] += (qtdA + qtdI);
         }
 
-        // --- Montagem da Linha da Tabela ---
-        const tr = document.createElement('tr');
-        
-        // Define o rótulo e estilo da linha
+        // Define estilos comuns
         let tipoLabel = item.tipo.toUpperCase();
         let rowColor = ''; 
         let detalhe = '-';
 
         if(item.tipo === 'estoque') {
-            rowColor = 'background-color: #dcfce7; font-weight: bold;'; // Destaque Verde
-            tipoLabel = '🟢 ENTRADA ESTOQUE';
-            detalhe = item.diretor ? item.diretor : 'Entrada Manual';
+            rowColor = 'background-color: #dcfce7; font-weight: bold;';
+            tipoLabel = '🟢 ENTRADA';
+            detalhe = item.diretor ? item.diretor : 'Manual';
         } else if (item.tipo === 'cortesia') {
-            detalhe = `Liberado por: ${item.diretor}`;
+            detalhe = `Lib: ${item.diretor}`;
         }
 
-        tr.style = rowColor;
-        tr.innerHTML = `
-            <td>${dataFormatada}</td>
-            <td>${tipoLabel}</td>
-            <td style="font-size:1.1em">${item.qtd}</td>
-            <td style="font-size:0.85em; color:#555">${detalhe}</td>
-            <td class="no-print action-buttons">
-                <button class="btn-icon edit" data-id="${id}" data-obj='${JSON.stringify(item)}' title="Editar">
-                    <span class="material-icons-round">edit</span>
-                </button>
-                <button class="btn-icon delete" data-id="${id}" title="Excluir">
-                    <span class="material-icons-round">delete</span>
-                </button>
-            </td>
-        `;
-        tableBody.appendChild(tr);
+        // --- LÓGICA DE SEPARAÇÃO ---
+
+        // 1. Se tem movimento de Adulto, adiciona na Tabela Adulto
+        if (qtdA > 0) {
+            const trA = document.createElement('tr');
+            trA.style = rowColor;
+            trA.innerHTML = `
+                <td>${dataFormatada}</td>
+                <td>${tipoLabel}</td>
+                <td style="font-weight:bold; font-size:1.1em">${qtdA}</td>
+                <td style="font-size:0.85em; color:#555">${detalhe}</td>
+                <td class="no-print action-buttons">
+                    <button class="btn-icon edit" data-id="${item.id}"><span class="material-icons-round">edit</span></button>
+                    <button class="btn-icon delete" data-id="${item.id}"><span class="material-icons-round">delete</span></button>
+                </td>
+            `;
+            tbodyAdulto.appendChild(trA);
+        }
+
+        // 2. Se tem movimento Infantil, adiciona na Tabela Infantil
+        if (qtdI > 0) {
+            const trI = document.createElement('tr');
+            trI.style = rowColor;
+            trI.innerHTML = `
+                <td>${dataFormatada}</td>
+                <td>${tipoLabel}</td>
+                <td style="font-weight:bold; font-size:1.1em; color:#3b82f6">${qtdI}</td>
+                <td style="font-size:0.85em; color:#555">${detalhe}</td>
+                <td class="no-print action-buttons">
+                    <button class="btn-icon edit" data-id="${item.id}"><span class="material-icons-round">edit</span></button>
+                    <button class="btn-icon delete" data-id="${item.id}"><span class="material-icons-round">delete</span></button>
+                </td>
+            `;
+            tbodyInfantil.appendChild(trI);
+        }
     });
 
-    // Atualiza os boxes do Dashboard
+    // Atualiza Dashboard
     document.getElementById('resDinheiro').innerText = totais.dinheiro;
     document.getElementById('resCartao').innerText = totais.cartao;
     document.getElementById('resPix').innerText = totais.pix;
     document.getElementById('resCortesia').innerText = totais.cortesia;
-    document.getElementById('totalGeral').innerText = totalGeralSaida;
-
-    // --- RE-ADICIONAR EVENTOS AOS BOTÕES DA TABELA ---
     
-    // Botão Excluir
+    // RECONECTA BOTÕES (EDITAR/EXCLUIR)
+    // Obs: Como o botão pode aparecer em duas tabelas com o mesmo ID,
+    // usamos a classe genérica para pegar todos de uma vez.
+    
     document.querySelectorAll('.btn-icon.delete').forEach(btn => {
         btn.addEventListener('click', async () => {
-            if(confirm("Tem certeza que deseja excluir este registro? Essa ação ajustará o estoque.")) {
-                const id = btn.getAttribute('data-id');
-                await deleteDoc(doc(db, "vendas", id));
-                // Recarrega tudo
+            if(confirm("Excluir este registro? (Isso removerá de ambas as listas se for misto)")) {
+                await deleteDoc(doc(db, "vendas", btn.getAttribute('data-id')));
                 carregarResumo(dateStart.value, dateEnd.value);
                 calcularEstoqueGeral();
             }
         });
     });
 
-    // Botão Editar
     document.querySelectorAll('.btn-icon.edit').forEach(btn => {
         btn.addEventListener('click', () => {
-            const dataObj = JSON.parse(btn.getAttribute('data-obj'));
+            // Precisamos achar o objeto na listaVendas pelo ID (pois o botão não tem o objeto full mais)
             const id = btn.getAttribute('data-id');
+            const item = listaVendas.find(v => v.id === id);
 
-            // Preenche o formulário com os dados existentes
-            editIdInput.value = id;
-            document.getElementById('dateInput').value = dataObj.data;
-            document.getElementById('quantityInput').value = dataObj.qtd;
-            paymentType.value = dataObj.tipo;
-            
-            // Aciona o evento 'change' manualmente para mostrar os campos corretos
-            const event = new Event('change');
-            paymentType.dispatchEvent(event);
+            if(item) {
+                editIdInput.value = id;
+                document.getElementById('dateInput').value = item.data;
+                qtdAdultoInput.value = item.qtdAdulto || 0;
+                qtdInfantilInput.value = item.qtdInfantil || 0;
+                paymentType.value = item.tipo;
+                const event = new Event('change');
+                paymentType.dispatchEvent(event);
+                if(item.diretor) directorInput.value = item.diretor;
 
-            // Preenche o campo de texto se necessário
-            if(dataObj.tipo === 'cortesia' || dataObj.tipo === 'estoque') {
-                directorInput.value = dataObj.diretor;
+                btnSubmit.innerText = 'Salvar Alteração';
+                btnSubmit.classList.add('btn-warning');
+                formTitle.innerText = 'Editando Registro';
+                btnCancelEdit.classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-
-            // Muda visual do botão para "Modo Edição"
-            btnSubmit.innerText = 'Salvar Alteração';
-            btnSubmit.classList.add('btn-warning');
-            formTitle.innerText = 'Editando Registro';
-            btnCancelEdit.classList.remove('hidden');
-
-            // Rola a tela para o topo
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     });
 }
 
-// Botão Filtrar
 btnFilter.addEventListener('click', () => {
     carregarResumo(dateStart.value, dateEnd.value);
 });
 
-// Inicialização ao abrir a página
 calcularEstoqueGeral();
 carregarResumo(dateStart.value, dateEnd.value);

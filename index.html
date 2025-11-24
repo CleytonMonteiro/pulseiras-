@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AABB ARACAJU - Gestão Completa</title>
+    <title>PulseiraTrack - Relatório Separado</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -13,18 +13,29 @@
     <div class="container">
         <header>
             <h1>AABB<span class="highlight">ARACAJU</span></h1>
-            <p>Controle de Estoque de Pulseiras</p>
+            <p>Controle de Pulseiras - Adulto & Infantil</p>
         </header>
 
-        <section class="stock-card">
-            <div class="stock-info">
-                <span class="material-icons-round">inventory_2</span>
-                <div>
-                    <span>Saldo em Estoque</span>
-                    <strong id="stockBalance">Calculando...</strong>
+        <section class="stock-card-container">
+            <div class="stock-card">
+                <div class="stock-info">
+                    <span class="material-icons-round">accessibility_new</span>
+                    <div>
+                        <span>Estoque Adulto</span>
+                        <strong id="stockAdulto">---</strong>
+                    </div>
                 </div>
             </div>
-            <button onclick="window.print()" class="btn-print" title="Imprimir Relatório">
+            <div class="stock-card secondary">
+                <div class="stock-info">
+                    <span class="material-icons-round">child_care</span>
+                    <div>
+                        <span>Estoque Infantil</span>
+                        <strong id="stockInfantil">---</strong>
+                    </div>
+                </div>
+            </div>
+            <button onclick="window.print()" class="btn-print no-print" title="Imprimir Relatório">
                 <span class="material-icons-round">print</span>
             </button>
         </section>
@@ -32,14 +43,22 @@
         <section class="card no-print">
             <h2 id="formTitle">Novo Lançamento</h2>
             <form id="salesForm">
-                <input type="hidden" id="editId"> <div class="input-group">
+                <input type="hidden" id="editId">
+
+                <div class="input-group">
                     <label>Data</label>
                     <input type="date" id="dateInput" required>
                 </div>
 
-                <div class="input-group">
-                    <label>Qtd. Pulseiras</label>
-                    <input type="number" id="quantityInput" min="1" value="1" required>
+                <div class="row-inputs">
+                    <div class="input-group">
+                        <label>Qtd. Adulto</label>
+                        <input type="number" id="qtdAdultoInput" min="0" value="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Qtd. Infantil</label>
+                        <input type="number" id="qtdInfantilInput" min="0" value="0">
+                    </div>
                 </div>
 
                 <div class="input-group">
@@ -55,7 +74,7 @@
                 </div>
 
                 <div class="input-group hidden" id="directorGroup">
-                    <label>Nome do Diretor (Autorização)</label>
+                    <label>Nome do Diretor</label>
                     <input type="text" id="directorInput" placeholder="Quem liberou?">
                 </div>
 
@@ -78,11 +97,6 @@
                     </div>
                     <button id="btnFilter" class="btn-secondary material-icons-round">search</button>
                 </div>
-            </div>
-
-            <div class="total-highlight">
-                <span class="label">Total Saídas no Período</span>
-                <strong id="totalGeral">0</strong>
             </div>
 
             <div class="dashboard">
@@ -108,9 +122,11 @@
                 </div>
             </div>
 
+            <hr class="divider no-print">
+
             <div class="table-container">
-                <h3>Detalhamento</h3>
-                <table id="reportTable">
+                <h3 class="table-title">📋 Movimentação ADULTO</h3>
+                <table id="tableAdulto">
                     <thead>
                         <tr>
                             <th>Data</th>
@@ -120,13 +136,29 @@
                             <th class="no-print">Ações</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
+
+            <br> <div class="table-container">
+                <h3 class="table-title" style="color: var(--info)">👶 Movimentação INFANTIL</h3>
+                <table id="tableInfantil">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Tipo</th>
+                            <th>Qtd</th>
+                            <th>Detalhe</th>
+                            <th class="no-print">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
         </section>
     </div>
 
-    <script type="module" src="app.js"></script>
+    <script type="module" src="app.js?v=4"></script>
 </body>
 </html>
