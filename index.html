@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AABB Aracaju - Relatório</title>
+    <title>AABB Aracaju - Gestão de Pulseiras</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -13,11 +13,11 @@
     <div class="container">
         <header>
             <h1>AABB<span class="highlight">ARACAJU</span></h1>
-            <p>Controle de Pulseiras - Adulto & Infantil</p>
+            <p>Controle de Pulseiras Adulto & Infantil</p>
         </header>
 
         <section class="stock-card-container">
-            <div class="stock-card">
+            <div class="stock-card" id="cardPanelAdulto">
                 <div class="stock-info">
                     <span class="material-icons-round">accessibility_new</span>
                     <div>
@@ -26,7 +26,8 @@
                     </div>
                 </div>
             </div>
-            <div class="stock-card secondary">
+            
+            <div class="stock-card secondary" id="cardPanelInfantil">
                 <div class="stock-info">
                     <span class="material-icons-round">child_care</span>
                     <div>
@@ -35,6 +36,7 @@
                     </div>
                 </div>
             </div>
+
             <button onclick="window.print()" class="btn-print no-print" title="Imprimir Relatório">
                 <span class="material-icons-round">print</span>
             </button>
@@ -140,7 +142,9 @@
                 </table>
             </div>
 
-            <br> <div class="table-container">
+            <br>
+
+            <div class="table-container">
                 <h3 class="table-title" style="color: var(--info)">👶 Movimentação INFANTIL</h3>
                 <table id="tableInfantil">
                     <thead>
@@ -155,10 +159,9 @@
                     <tbody></tbody>
                 </table>
             </div>
-
         </section>
     </div>
 
-    <script type="module" src="app.js?v=4"></script>
+    <script type="module" src="app.js?v=5"></script>
 </body>
 </html>

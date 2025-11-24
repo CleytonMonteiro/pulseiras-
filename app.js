@@ -14,6 +14,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// CONFIGURAÇÃO DE ALERTA
+const LIMITE_ALERTA = 20; // <-- DEFINA AQUI O NÚMERO MÍNIMO
+
 // ELEMENTOS
 const salesForm = document.getElementById('salesForm');
 const paymentType = document.getElementById('paymentType');
@@ -28,13 +31,14 @@ const btnCancelEdit = document.getElementById('btnCancelEdit');
 const formTitle = document.getElementById('formTitle');
 const lblDirector = document.querySelector('#directorGroup label');
 
-// Inputs de Quantidade
 const qtdAdultoInput = document.getElementById('qtdAdultoInput');
 const qtdInfantilInput = document.getElementById('qtdInfantilInput');
-
-// Tabelas Separadas
 const tbodyAdulto = document.querySelector('#tableAdulto tbody');
 const tbodyInfantil = document.querySelector('#tableInfantil tbody');
+
+// Painéis de Estoque (Para mudar a cor)
+const cardPanelAdulto = document.getElementById('cardPanelAdulto');
+const cardPanelInfantil = document.getElementById('cardPanelInfantil');
 
 // Data Inicial
 const hoje = new Date();
@@ -124,7 +128,7 @@ function resetFormMode() {
 
 btnCancelEdit.addEventListener('click', resetFormMode);
 
-// --- ESTOQUE ---
+// --- ESTOQUE E ALERTA ---
 async function calcularEstoqueGeral() {
     const q = query(collection(db, "vendas"));
     const querySnapshot = await getDocs(q);
@@ -155,8 +159,25 @@ async function calcularEstoqueGeral() {
     elA.innerText = saldoA;
     elI.innerText = saldoI;
     
-    elA.style.color = saldoA < 0 ? '#ef4444' : '#10b981';
-    elI.style.color = saldoI < 0 ? '#ef4444' : '#3b82f6';
+    // --- LÓGICA DE ALERTA VISUAL ---
+    
+    // Alerta Adulto
+    if(saldoA <= LIMITE_ALERTA) {
+        cardPanelAdulto.classList.add('low-stock-alert');
+    } else {
+        cardPanelAdulto.classList.remove('low-stock-alert');
+    }
+
+    // Alerta Infantil
+    if(saldoI <= LIMITE_ALERTA) {
+        cardPanelInfantil.classList.add('low-stock-alert');
+    } else {
+        cardPanelInfantil.classList.remove('low-stock-alert');
+    }
+
+    // Cores do texto
+    elA.style.color = saldoA < 0 ? '#ef4444' : (saldoA <= LIMITE_ALERTA ? '#ef4444' : '#10b981');
+    elI.style.color = saldoI < 0 ? '#ef4444' : (saldoI <= LIMITE_ALERTA ? '#ef4444' : '#3b82f6');
 }
 
 // --- RELATÓRIO SEPARADO ---
@@ -170,7 +191,6 @@ async function carregarResumo(inicio, fim) {
     
     const querySnapshot = await getDocs(q);
 
-    // Totais do Dashboard (Financeiro Geral)
     let totais = { dinheiro: 0, cartao: 0, pix: 0, cortesia: 0 };
     let listaVendas = [];
 
@@ -178,14 +198,12 @@ async function carregarResumo(inicio, fim) {
         listaVendas.push({ id: doc.id, ...doc.data() });
     });
 
-    // Ordena: Estoque no topo
     listaVendas.sort((a, b) => {
         if (a.tipo === 'estoque' && b.tipo !== 'estoque') return -1;
         if (b.tipo === 'estoque' && a.tipo !== 'estoque') return 1;
         return 0;
     });
 
-    // Limpa as DUAS tabelas
     tbodyAdulto.innerHTML = '';
     tbodyInfantil.innerHTML = '';
 
@@ -194,12 +212,10 @@ async function carregarResumo(inicio, fim) {
         const qtdA = item.qtdAdulto || 0;
         const qtdI = item.qtdInfantil || 0;
         
-        // Soma no dashboard financeiro (pagamentos)
         if (item.tipo !== 'estoque') {
             if (totais[item.tipo] !== undefined) totais[item.tipo] += (qtdA + qtdI);
         }
 
-        // Define estilos comuns
         let tipoLabel = item.tipo.toUpperCase();
         let rowColor = ''; 
         let detalhe = '-';
@@ -212,9 +228,6 @@ async function carregarResumo(inicio, fim) {
             detalhe = `Lib: ${item.diretor}`;
         }
 
-        // --- LÓGICA DE SEPARAÇÃO ---
-
-        // 1. Se tem movimento de Adulto, adiciona na Tabela Adulto
         if (qtdA > 0) {
             const trA = document.createElement('tr');
             trA.style = rowColor;
@@ -231,7 +244,6 @@ async function carregarResumo(inicio, fim) {
             tbodyAdulto.appendChild(trA);
         }
 
-        // 2. Se tem movimento Infantil, adiciona na Tabela Infantil
         if (qtdI > 0) {
             const trI = document.createElement('tr');
             trI.style = rowColor;
@@ -249,19 +261,14 @@ async function carregarResumo(inicio, fim) {
         }
     });
 
-    // Atualiza Dashboard
     document.getElementById('resDinheiro').innerText = totais.dinheiro;
     document.getElementById('resCartao').innerText = totais.cartao;
     document.getElementById('resPix').innerText = totais.pix;
     document.getElementById('resCortesia').innerText = totais.cortesia;
     
-    // RECONECTA BOTÕES (EDITAR/EXCLUIR)
-    // Obs: Como o botão pode aparecer em duas tabelas com o mesmo ID,
-    // usamos a classe genérica para pegar todos de uma vez.
-    
     document.querySelectorAll('.btn-icon.delete').forEach(btn => {
         btn.addEventListener('click', async () => {
-            if(confirm("Excluir este registro? (Isso removerá de ambas as listas se for misto)")) {
+            if(confirm("Excluir registro?")) {
                 await deleteDoc(doc(db, "vendas", btn.getAttribute('data-id')));
                 carregarResumo(dateStart.value, dateEnd.value);
                 calcularEstoqueGeral();
@@ -271,10 +278,8 @@ async function carregarResumo(inicio, fim) {
 
     document.querySelectorAll('.btn-icon.edit').forEach(btn => {
         btn.addEventListener('click', () => {
-            // Precisamos achar o objeto na listaVendas pelo ID (pois o botão não tem o objeto full mais)
             const id = btn.getAttribute('data-id');
             const item = listaVendas.find(v => v.id === id);
-
             if(item) {
                 editIdInput.value = id;
                 document.getElementById('dateInput').value = item.data;
@@ -284,7 +289,6 @@ async function carregarResumo(inicio, fim) {
                 const event = new Event('change');
                 paymentType.dispatchEvent(event);
                 if(item.diretor) directorInput.value = item.diretor;
-
                 btnSubmit.innerText = 'Salvar Alteração';
                 btnSubmit.classList.add('btn-warning');
                 formTitle.innerText = 'Editando Registro';
