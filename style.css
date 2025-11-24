@@ -1,0 +1,113 @@
+:root {
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --bg: #f3f4f6;
+    --card-bg: #ffffff;
+    --text: #1f2937;
+    --radius: 12px;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container { width: 100%; max-width: 600px; } /* Aumentei um pouco a largura */
+
+header { text-align: center; margin-bottom: 20px; }
+h1 { margin: 0; font-size: 1.8rem; }
+.highlight { color: var(--primary); }
+
+.card {
+    background: var(--card-bg);
+    padding: 24px;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+/* Novo Card de Estoque */
+.stock-card {
+    background: #1f2937; /* Escuro */
+    color: white;
+    padding: 15px 24px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.stock-info { display: flex; gap: 15px; align-items: center; }
+.stock-info span.material-icons-round { font-size: 2.5rem; color: var(--success); }
+.stock-info div { display: flex; flex-direction: column; }
+.stock-info strong { font-size: 1.5rem; }
+
+.btn-print {
+    background: rgba(255,255,255,0.1);
+    border: none; color: white; padding: 10px;
+    border-radius: 50%; cursor: pointer;
+}
+.btn-print:hover { background: rgba(255,255,255,0.2); }
+
+/* Inputs e Forms */
+.input-group { margin-bottom: 15px; }
+label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: #6b7280; }
+input, select {
+    width: 100%; padding: 10px; border: 1px solid #e5e7eb;
+    border-radius: 8px; font-size: 1rem; box-sizing: border-box;
+}
+.hidden { display: none !important; }
+
+/* Botões */
+.btn-primary {
+    width: 100%; padding: 12px; background: var(--primary);
+    color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+
+.btn-warning { background: var(--warning) !important; color: white; }
+.btn-secondary { background: #e5e7eb; border: none; padding: 10px; border-radius: 8px; cursor: pointer; }
+
+/* Dashboard e Filtros */
+.filter-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; }
+.date-filter { display: flex; gap: 8px; }
+.total-highlight { background: var(--primary); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; }
+.dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.stat-box { background: #f9fafb; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #f3f4f6; }
+
+/* --- TABELA --- */
+.table-container { margin-top: 30px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th { text-align: left; padding: 10px; border-bottom: 2px solid #e5e7eb; color: #6b7280; }
+td { padding: 10px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
+
+/* Botões de Ação na Tabela */
+.action-buttons { display: flex; gap: 5px; }
+.btn-icon {
+    border: none; background: transparent; cursor: pointer; padding: 5px; border-radius: 4px;
+}
+.btn-icon.edit { color: var(--primary); background: #e0e7ff; }
+.btn-icon.delete { color: var(--danger); background: #fee2e2; }
+.btn-icon span { font-size: 18px; }
+
+/* --- IMPRESSÃO --- */
+@media print {
+    body { background: white; padding: 0; }
+    .no-print { display: none !important; } /* Esconde Form, Filtros e Botões */
+    .container { max-width: 100%; width: 100%; }
+    .card, .stock-card, .total-highlight { box-shadow: none; border: 1px solid #ddd; }
+    .stock-card { color: black; background: white; border: 2px solid black; }
+    .stock-info span.material-icons-round { color: black; }
+    
+    /* Ajuste da tabela para impressão */
+    table { width: 100%; }
+    th, td { border-bottom: 1px solid #000; }
+}
