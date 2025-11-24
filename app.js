@@ -155,14 +155,14 @@ async function calcularEstoqueGeral() {
     }
 }
 
-// --- 7. RELATÓRIO E TABELA ---
+// --- 7. RELATÓRIO E TABELA (COM ORDENAÇÃO DE ESTOQUE) ---
 async function carregarResumo(inicio, fim) {
     // Busca dados dentro do período selecionado
     const q = query(
         collection(db, "vendas"), 
         where("data", ">=", inicio),
         where("data", "<=", fim),
-        orderBy("data", "desc") // Ordena do mais recente para o mais antigo
+        orderBy("data", "desc") // Primeiro ordena por data
     );
     
     const querySnapshot = await getDocs(q);
@@ -171,16 +171,33 @@ async function carregarResumo(inicio, fim) {
     let totais = { dinheiro: 0, cartao: 0, pix: 0, cortesia: 0 };
     let totalGeralSaida = 0;
     
-    tableBody.innerHTML = ''; // Limpa a tabela antes de preencher
+    // 1. Transforma o snapshot em uma lista (array) para poder reordenar via JS
+    let listaVendas = [];
+    querySnapshot.forEach((doc) => {
+        listaVendas.push({ id: doc.id, ...doc.data() });
+    });
 
-    querySnapshot.forEach((docSnap) => {
-        const item = docSnap.data();
-        const id = docSnap.id;
+    // 2. ORDENAÇÃO ESPECIAL: Estoque sempre no topo
+    listaVendas.sort((a, b) => {
+        // Se 'a' é estoque e 'b' não é, 'a' vem primeiro
+        if (a.tipo === 'estoque' && b.tipo !== 'estoque') return -1;
+        // Se 'b' é estoque e 'a' não é, 'b' vem primeiro
+        if (b.tipo === 'estoque' && a.tipo !== 'estoque') return 1;
+        // Caso contrário, mantém a ordem original (que já é data desc)
+        return 0;
+    });
+
+    // Limpa a tabela antes de preencher
+    tableBody.innerHTML = '';
+
+    // 3. Renderiza a tabela
+    listaVendas.forEach((item) => {
+        const id = item.id;
         
         // Formata data de "2025-11-24" para "24/11"
         const dataFormatada = item.data.split('-').reverse().slice(0, 2).join('/');
 
-        // Se NÃO for estoque, soma nos totais de saída
+        // Se NÃO for estoque, soma nos totais de saída (Dashboard)
         if (item.tipo !== 'estoque') {
             if (totais[item.tipo] !== undefined) totais[item.tipo] += item.qtd;
             totalGeralSaida += item.qtd;
@@ -191,12 +208,12 @@ async function carregarResumo(inicio, fim) {
         
         // Define o rótulo e estilo da linha
         let tipoLabel = item.tipo.toUpperCase();
-        let rowColor = ''; // cor padrão
+        let rowColor = ''; 
         let detalhe = '-';
 
         if(item.tipo === 'estoque') {
-            rowColor = 'background-color: #dcfce7;'; // Verde claro para entradas
-            tipoLabel = '🟢 ENTRADA';
+            rowColor = 'background-color: #dcfce7; font-weight: bold;'; // Destaque Verde
+            tipoLabel = '🟢 ENTRADA ESTOQUE';
             detalhe = item.diretor ? item.diretor : 'Entrada Manual';
         } else if (item.tipo === 'cortesia') {
             detalhe = `Liberado por: ${item.diretor}`;
@@ -206,7 +223,7 @@ async function carregarResumo(inicio, fim) {
         tr.innerHTML = `
             <td>${dataFormatada}</td>
             <td>${tipoLabel}</td>
-            <td style="font-weight:bold; font-size:1.1em">${item.qtd}</td>
+            <td style="font-size:1.1em">${item.qtd}</td>
             <td style="font-size:0.85em; color:#555">${detalhe}</td>
             <td class="no-print action-buttons">
                 <button class="btn-icon edit" data-id="${id}" data-obj='${JSON.stringify(item)}' title="Editar">
@@ -228,8 +245,7 @@ async function carregarResumo(inicio, fim) {
     document.getElementById('totalGeral').innerText = totalGeralSaida;
 
     // --- RE-ADICIONAR EVENTOS AOS BOTÕES DA TABELA ---
-    // (Como a tabela foi recriada, precisamos "ligar" os botões novamente)
-
+    
     // Botão Excluir
     document.querySelectorAll('.btn-icon.delete').forEach(btn => {
         btn.addEventListener('click', async () => {
