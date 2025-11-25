@@ -14,8 +14,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// CONFIGURAÇÃO DE ALERTA
-const LIMITE_ALERTA = 20; // <-- DEFINA AQUI O NÚMERO MÍNIMO
+// CONFIG DE ALERTA
+const LIMITE_ALERTA = 20;
 
 // ELEMENTOS
 const salesForm = document.getElementById('salesForm');
@@ -36,17 +36,16 @@ const qtdInfantilInput = document.getElementById('qtdInfantilInput');
 const tbodyAdulto = document.querySelector('#tableAdulto tbody');
 const tbodyInfantil = document.querySelector('#tableInfantil tbody');
 
-// Painéis de Estoque (Para mudar a cor)
 const cardPanelAdulto = document.getElementById('cardPanelAdulto');
 const cardPanelInfantil = document.getElementById('cardPanelInfantil');
 
-// Data Inicial
+// Datas
 const hoje = new Date();
 document.getElementById('dateInput').valueAsDate = hoje;
 dateStart.valueAsDate = hoje;
 dateEnd.valueAsDate = hoje;
 
-// Lógica de Campos
+// Inputs Lógica
 paymentType.addEventListener('change', (e) => {
     const tipo = e.target.value;
     if(tipo === 'cortesia' || tipo === 'estoque') {
@@ -159,28 +158,19 @@ async function calcularEstoqueGeral() {
     elA.innerText = saldoA;
     elI.innerText = saldoI;
     
-    // --- LÓGICA DE ALERTA VISUAL ---
-    
-    // Alerta Adulto
-    if(saldoA <= LIMITE_ALERTA) {
-        cardPanelAdulto.classList.add('low-stock-alert');
-    } else {
-        cardPanelAdulto.classList.remove('low-stock-alert');
-    }
+    // Alerta Visual
+    if(saldoA <= LIMITE_ALERTA) cardPanelAdulto.classList.add('low-stock-alert');
+    else cardPanelAdulto.classList.remove('low-stock-alert');
 
-    // Alerta Infantil
-    if(saldoI <= LIMITE_ALERTA) {
-        cardPanelInfantil.classList.add('low-stock-alert');
-    } else {
-        cardPanelInfantil.classList.remove('low-stock-alert');
-    }
+    if(saldoI <= LIMITE_ALERTA) cardPanelInfantil.classList.add('low-stock-alert');
+    else cardPanelInfantil.classList.remove('low-stock-alert');
 
-    // Cores do texto
+    // Cores Texto
     elA.style.color = saldoA < 0 ? '#ef4444' : (saldoA <= LIMITE_ALERTA ? '#ef4444' : '#10b981');
     elI.style.color = saldoI < 0 ? '#ef4444' : (saldoI <= LIMITE_ALERTA ? '#ef4444' : '#3b82f6');
 }
 
-// --- RELATÓRIO SEPARADO ---
+// --- RELATÓRIO SEPARADO E DASHBOARD DETALHADO ---
 async function carregarResumo(inicio, fim) {
     const q = query(
         collection(db, "vendas"), 
@@ -191,13 +181,21 @@ async function carregarResumo(inicio, fim) {
     
     const querySnapshot = await getDocs(q);
 
-    let totais = { dinheiro: 0, cartao: 0, pix: 0, cortesia: 0 };
+    // Totais Detalhados
+    let totais = { 
+        dinheiro: { a: 0, i: 0 }, 
+        cartao:   { a: 0, i: 0 }, 
+        pix:      { a: 0, i: 0 }, 
+        cortesia: { a: 0, i: 0 } 
+    };
+
     let listaVendas = [];
 
     querySnapshot.forEach((doc) => {
         listaVendas.push({ id: doc.id, ...doc.data() });
     });
 
+    // Ordena: Estoque primeiro
     listaVendas.sort((a, b) => {
         if (a.tipo === 'estoque' && b.tipo !== 'estoque') return -1;
         if (b.tipo === 'estoque' && a.tipo !== 'estoque') return 1;
@@ -212,8 +210,12 @@ async function carregarResumo(inicio, fim) {
         const qtdA = item.qtdAdulto || 0;
         const qtdI = item.qtdInfantil || 0;
         
+        // SOMA PARA O DASHBOARD (SE NÃO FOR ESTOQUE)
         if (item.tipo !== 'estoque') {
-            if (totais[item.tipo] !== undefined) totais[item.tipo] += (qtdA + qtdI);
+            if (totais[item.tipo]) {
+                totais[item.tipo].a += qtdA;
+                totais[item.tipo].i += qtdI;
+            }
         }
 
         let tipoLabel = item.tipo.toUpperCase();
@@ -228,6 +230,7 @@ async function carregarResumo(inicio, fim) {
             detalhe = `Lib: ${item.diretor}`;
         }
 
+        // TABELA ADULTO
         if (qtdA > 0) {
             const trA = document.createElement('tr');
             trA.style = rowColor;
@@ -244,6 +247,7 @@ async function carregarResumo(inicio, fim) {
             tbodyAdulto.appendChild(trA);
         }
 
+        // TABELA INFANTIL
         if (qtdI > 0) {
             const trI = document.createElement('tr');
             trI.style = rowColor;
@@ -261,14 +265,33 @@ async function carregarResumo(inicio, fim) {
         }
     });
 
-    document.getElementById('resDinheiro').innerText = totais.dinheiro;
-    document.getElementById('resCartao').innerText = totais.cartao;
-    document.getElementById('resPix').innerText = totais.pix;
-    document.getElementById('resCortesia').innerText = totais.cortesia;
+    // RENDERIZA O DASHBOARD DETALHADO
+    const renderStat = (dados) => {
+        const total = dados.a + dados.i;
+        return `
+            <div class="stat-values">
+                <div class="stat-row">
+                    <small>Adulto:</small> <span class="val-adulto">${dados.a}</span>
+                </div>
+                <div class="stat-row">
+                    <small style="color:var(--info)">Infantil:</small> <span class="val-infantil">${dados.i}</span>
+                </div>
+                <div class="stat-row val-total">
+                    <small>Total:</small> <strong>${total}</strong>
+                </div>
+            </div>
+        `;
+    };
+
+    document.getElementById('resDinheiro').innerHTML = renderStat(totais.dinheiro);
+    document.getElementById('resCartao').innerHTML = renderStat(totais.cartao);
+    document.getElementById('resPix').innerHTML = renderStat(totais.pix);
+    document.getElementById('resCortesia').innerHTML = renderStat(totais.cortesia);
     
+    // Reconecta botões
     document.querySelectorAll('.btn-icon.delete').forEach(btn => {
         btn.addEventListener('click', async () => {
-            if(confirm("Excluir registro?")) {
+            if(confirm("Excluir registro? (Afeta ambas as listas se misto)")) {
                 await deleteDoc(doc(db, "vendas", btn.getAttribute('data-id')));
                 carregarResumo(dateStart.value, dateEnd.value);
                 calcularEstoqueGeral();
@@ -289,6 +312,7 @@ async function carregarResumo(inicio, fim) {
                 const event = new Event('change');
                 paymentType.dispatchEvent(event);
                 if(item.diretor) directorInput.value = item.diretor;
+
                 btnSubmit.innerText = 'Salvar Alteração';
                 btnSubmit.classList.add('btn-warning');
                 formTitle.innerText = 'Editando Registro';
