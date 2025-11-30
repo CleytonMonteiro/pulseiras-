@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pulseiras - Gestão Completa</title>
+    <title>Pulseira - Gestão</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -12,8 +12,8 @@
 
     <div class="container">
         <header>
-            <h1>AABB-<span class="highlight">ARACAJU</span></h1>
-            <p class="no-print">Controle de Pulsieras - Adulto & Infantil</p>
+            <h1>AABB-<span class="highlight">Aracaju</span></h1>
+            <p class="no-print">Controle de Pulseiras Adulto & Infantil</p>
             <p id="printPeriod" class="only-print"></p>
         </header>
 
@@ -38,9 +38,17 @@
                 </div>
             </div>
 
-            <button onclick="window.print()" class="btn-print no-print" title="Imprimir Relatório">
-                <span class="material-icons-round">print</span>
-            </button>
+            <div class="action-panel no-print">
+                <button onclick="window.print()" class="btn-circle" title="Imprimir Relatório">
+                    <span class="material-icons-round">print</span>
+                </button>
+                <button id="btnExcel" class="btn-circle" title="Baixar Excel">
+                    <span class="material-icons-round">file_download</span>
+                </button>
+                <button id="btnFecharCaixa" class="btn-circle warning" title="Consolidar Estoque (Arquivar)">
+                    <span class="material-icons-round">inventory</span>
+                </button>
+            </div>
         </section>
 
         <section class="card no-print">
@@ -184,6 +192,6 @@
         </section>
     </div>
 
-    <script type="module" src="app.js?v=9"></script>
+    <script type="module" src="app.js?v=11"></script>
 </body>
 </html>
