@@ -30,6 +30,7 @@ const btnSubmit = document.getElementById('btnSubmit');
 const btnCancelEdit = document.getElementById('btnCancelEdit');
 const formTitle = document.getElementById('formTitle');
 const lblDirector = document.querySelector('#directorGroup label');
+const printPeriod = document.getElementById('printPeriod'); 
 
 const qtdAdultoInput = document.getElementById('qtdAdultoInput');
 const qtdInfantilInput = document.getElementById('qtdInfantilInput');
@@ -38,6 +39,11 @@ const tbodyInfantil = document.querySelector('#tableInfantil tbody');
 
 const cardPanelAdulto = document.getElementById('cardPanelAdulto');
 const cardPanelInfantil = document.getElementById('cardPanelInfantil');
+
+// TOTAIS GERAIS
+const elGlobalAdulto = document.getElementById('globalAdulto');
+const elGlobalInfantil = document.getElementById('globalInfantil');
+const elGlobalTotal = document.getElementById('globalTotal');
 
 // Datas
 const hoje = new Date();
@@ -48,12 +54,18 @@ dateEnd.valueAsDate = hoje;
 // Inputs Lógica
 paymentType.addEventListener('change', (e) => {
     const tipo = e.target.value;
-    if(tipo === 'cortesia' || tipo === 'estoque') {
+    
+    // Agora inclui 'defeito' na verificação para mostrar o campo de texto
+    if(tipo === 'cortesia' || tipo === 'estoque' || tipo === 'defeito') {
         directorGroup.classList.remove('hidden');
         directorInput.setAttribute('required', 'true');
+        
         if(tipo === 'estoque') {
             lblDirector.innerText = 'Observação (Ex: Saldo Inicial)';
             directorInput.placeholder = 'Descrição...';
+        } else if (tipo === 'defeito') {
+            lblDirector.innerText = 'Motivo do Defeito';
+            directorInput.placeholder = 'Ex: Rasgou, falha no fecho...';
         } else {
             lblDirector.innerText = 'Nome do Diretor';
             directorInput.placeholder = 'Quem liberou?';
@@ -86,7 +98,8 @@ salesForm.addEventListener('submit', async (e) => {
         qtdAdulto: qtdA,
         qtdInfantil: qtdI,
         tipo: type,
-        diretor: (type === 'cortesia' || type === 'estoque') ? director : null,
+        // Salva a observação também se for defeito
+        diretor: (type === 'cortesia' || type === 'estoque' || type === 'defeito') ? director : null,
         created_at: new Date()
     };
 
@@ -144,6 +157,7 @@ async function calcularEstoqueGeral() {
             entradaA += valA;
             entradaI += valI;
         } else {
+            // Dinheiro, Pix, Cortesia e DEFEITO contam como saída do estoque
             saidaA += valA;
             saidaI += valI;
         }
@@ -170,8 +184,12 @@ async function calcularEstoqueGeral() {
     elI.style.color = saldoI < 0 ? '#ef4444' : (saldoI <= LIMITE_ALERTA ? '#ef4444' : '#3b82f6');
 }
 
-// --- RELATÓRIO SEPARADO E DASHBOARD DETALHADO ---
+// --- RELATÓRIO ---
 async function carregarResumo(inicio, fim) {
+    const dataInicioF = inicio.split('-').reverse().join('/');
+    const dataFimF = fim.split('-').reverse().join('/');
+    printPeriod.innerText = `Período: ${dataInicioF} até ${dataFimF}`;
+
     const q = query(
         collection(db, "vendas"), 
         where("data", ">=", inicio),
@@ -186,8 +204,12 @@ async function carregarResumo(inicio, fim) {
         dinheiro: { a: 0, i: 0 }, 
         cartao:   { a: 0, i: 0 }, 
         pix:      { a: 0, i: 0 }, 
-        cortesia: { a: 0, i: 0 } 
+        cortesia: { a: 0, i: 0 },
+        defeito:  { a: 0, i: 0 } // Novo item
     };
+
+    let totalGlobalA = 0;
+    let totalGlobalI = 0;
 
     let listaVendas = [];
 
@@ -195,7 +217,6 @@ async function carregarResumo(inicio, fim) {
         listaVendas.push({ id: doc.id, ...doc.data() });
     });
 
-    // Ordena: Estoque primeiro
     listaVendas.sort((a, b) => {
         if (a.tipo === 'estoque' && b.tipo !== 'estoque') return -1;
         if (b.tipo === 'estoque' && a.tipo !== 'estoque') return 1;
@@ -210,62 +231,60 @@ async function carregarResumo(inicio, fim) {
         const qtdA = item.qtdAdulto || 0;
         const qtdI = item.qtdInfantil || 0;
         
-        // SOMA PARA O DASHBOARD (SE NÃO FOR ESTOQUE)
         if (item.tipo !== 'estoque') {
             if (totais[item.tipo]) {
                 totais[item.tipo].a += qtdA;
                 totais[item.tipo].i += qtdI;
             }
+            totalGlobalA += qtdA;
+            totalGlobalI += qtdI;
         }
 
         let tipoLabel = item.tipo.toUpperCase();
         let rowColor = ''; 
         let detalhe = '-';
 
+        // Lógica de visualização
         if(item.tipo === 'estoque') {
             rowColor = 'background-color: #dcfce7; font-weight: bold;';
             tipoLabel = '🟢 ENTRADA';
             detalhe = item.diretor ? item.diretor : 'Manual';
         } else if (item.tipo === 'cortesia') {
             detalhe = `Lib: ${item.diretor}`;
+        } else if (item.tipo === 'defeito') {
+            rowColor = 'background-color: #fef2f2; color: #ef4444;'; // Vermelho claro
+            tipoLabel = '⚠️ DEFEITO';
+            detalhe = item.diretor ? item.diretor : 'Sem motivo';
         }
 
-        // TABELA ADULTO
-        if (qtdA > 0) {
-            const trA = document.createElement('tr');
-            trA.style = rowColor;
-            trA.innerHTML = `
+        // Função auxiliar para criar linha da tabela
+        const createRow = (qtd, isInfantil) => {
+            const qtdClass = isInfantil ? 'color: #3b82f6;' : '';
+            const tr = document.createElement('tr');
+            tr.style = rowColor;
+            tr.innerHTML = `
                 <td>${dataFormatada}</td>
                 <td>${tipoLabel}</td>
-                <td style="font-weight:bold; font-size:1.1em">${qtdA}</td>
+                <td style="font-weight:bold; font-size:1.1em; ${qtdClass}">${qtd}</td>
                 <td style="font-size:0.85em; color:#555">${detalhe}</td>
                 <td class="no-print action-buttons">
                     <button class="btn-icon edit" data-id="${item.id}"><span class="material-icons-round">edit</span></button>
                     <button class="btn-icon delete" data-id="${item.id}"><span class="material-icons-round">delete</span></button>
                 </td>
             `;
-            tbodyAdulto.appendChild(trA);
-        }
+            return tr;
+        };
 
-        // TABELA INFANTIL
-        if (qtdI > 0) {
-            const trI = document.createElement('tr');
-            trI.style = rowColor;
-            trI.innerHTML = `
-                <td>${dataFormatada}</td>
-                <td>${tipoLabel}</td>
-                <td style="font-weight:bold; font-size:1.1em; color:#3b82f6">${qtdI}</td>
-                <td style="font-size:0.85em; color:#555">${detalhe}</td>
-                <td class="no-print action-buttons">
-                    <button class="btn-icon edit" data-id="${item.id}"><span class="material-icons-round">edit</span></button>
-                    <button class="btn-icon delete" data-id="${item.id}"><span class="material-icons-round">delete</span></button>
-                </td>
-            `;
-            tbodyInfantil.appendChild(trI);
-        }
+        if (qtdA > 0) tbodyAdulto.appendChild(createRow(qtdA, false));
+        if (qtdI > 0) tbodyInfantil.appendChild(createRow(qtdI, true));
     });
 
-    // RENDERIZA O DASHBOARD DETALHADO
+    // Atualiza Barra Global
+    elGlobalAdulto.innerText = totalGlobalA;
+    elGlobalInfantil.innerText = totalGlobalI;
+    elGlobalTotal.innerText = totalGlobalA + totalGlobalI;
+
+    // Renderiza Caixinhas
     const renderStat = (dados) => {
         const total = dados.a + dados.i;
         return `
@@ -287,11 +306,12 @@ async function carregarResumo(inicio, fim) {
     document.getElementById('resCartao').innerHTML = renderStat(totais.cartao);
     document.getElementById('resPix').innerHTML = renderStat(totais.pix);
     document.getElementById('resCortesia').innerHTML = renderStat(totais.cortesia);
+    document.getElementById('resDefeito').innerHTML = renderStat(totais.defeito); // Novo
     
     // Reconecta botões
     document.querySelectorAll('.btn-icon.delete').forEach(btn => {
         btn.addEventListener('click', async () => {
-            if(confirm("Excluir registro? (Afeta ambas as listas se misto)")) {
+            if(confirm("Excluir registro?")) {
                 await deleteDoc(doc(db, "vendas", btn.getAttribute('data-id')));
                 carregarResumo(dateStart.value, dateEnd.value);
                 calcularEstoqueGeral();

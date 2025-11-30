@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PulseiraTrack - Gestão Completa</title>
+    <title>Pulseiras - Gestão Completa</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -13,7 +13,8 @@
     <div class="container">
         <header>
             <h1>AABB-<span class="highlight">ARACAJU</span></h1>
-            <p>Controle de Pulseiras Adulto & Infantil</p>
+            <p class="no-print">Controle de Pulsieras - Adulto & Infantil</p>
+            <p id="printPeriod" class="only-print"></p>
         </header>
 
         <section class="stock-card-container">
@@ -71,6 +72,7 @@
                         <option value="cartao">Saída - Cartão</option>
                         <option value="pix">Saída - PIX</option>
                         <option value="cortesia">Saída - Cortesia</option>
+                        <option value="defeito" style="font-weight: bold; color: #ef4444;">Saída - Defeito/Perda</option>
                         <option value="estoque" style="font-weight: bold; color: green;">+ Entrada de Estoque</option>
                     </select>
                 </div>
@@ -101,6 +103,21 @@
                 </div>
             </div>
 
+            <div class="summary-bar">
+                <div class="sum-item">
+                    <span>Total Adultos</span>
+                    <strong id="globalAdulto">0</strong>
+                </div>
+                <div class="sum-item info">
+                    <span>Total Infantil</span>
+                    <strong id="globalInfantil">0</strong>
+                </div>
+                <div class="sum-item highlight">
+                    <span>Total Geral</span>
+                    <strong id="globalTotal">0</strong>
+                </div>
+            </div>
+
             <div class="dashboard">
                 <div class="stat-box">
                     <span class="material-icons-round">confirmation_number</span>
@@ -121,6 +138,11 @@
                     <span class="material-icons-round">loyalty</span>
                     <p>Cortesias</p>
                     <div id="resCortesia" style="width: 100%">Loading...</div>
+                </div>
+                <div class="stat-box warning">
+                    <span class="material-icons-round">broken_image</span>
+                    <p>Defeitos</p>
+                    <div id="resDefeito" style="width: 100%">Loading...</div>
                 </div>
             </div>
 
@@ -162,6 +184,6 @@
         </section>
     </div>
 
-    <script type="module" src="app.js?v=6"></script>
+    <script type="module" src="app.js?v=9"></script>
 </body>
 </html>
