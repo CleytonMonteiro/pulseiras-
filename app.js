@@ -32,102 +32,92 @@ const formTitle = document.getElementById('formTitle');
 const lblDirector = document.querySelector('#directorGroup label');
 const printPeriod = document.getElementById('printPeriod'); 
 
-// Inputs de Quantidade
 const qtdAdultoInput = document.getElementById('qtdAdultoInput');
 const qtdInfantilInput = document.getElementById('qtdInfantilInput');
-
-// Tabelas
 const tbodyAdulto = document.querySelector('#tableAdulto tbody');
 const tbodyInfantil = document.querySelector('#tableInfantil tbody');
-
-// Painéis de Estoque
 const cardPanelAdulto = document.getElementById('cardPanelAdulto');
 const cardPanelInfantil = document.getElementById('cardPanelInfantil');
-
-// Elementos de Totais Gerais
 const elGlobalAdulto = document.getElementById('globalAdulto');
 const elGlobalInfantil = document.getElementById('globalInfantil');
 const elGlobalTotal = document.getElementById('globalTotal');
-
-// Botões de Ação
 const btnExcel = document.getElementById('btnExcel');
 const btnFecharCaixa = document.getElementById('btnFecharCaixa');
 
 // Define datas iniciais como "Hoje"
 const hoje = new Date();
-document.getElementById('dateInput').valueAsDate = hoje;
-dateStart.valueAsDate = hoje;
-dateEnd.valueAsDate = hoje;
+if(document.getElementById('dateInput')) document.getElementById('dateInput').valueAsDate = hoje;
+if(dateStart) dateStart.valueAsDate = hoje;
+if(dateEnd) dateEnd.valueAsDate = hoje;
 
 // --- 3. LÓGICA DE FORMULÁRIO ---
-paymentType.addEventListener('change', (e) => {
-    const tipo = e.target.value;
-    
-    if(tipo === 'cortesia' || tipo === 'estoque' || tipo === 'defeito') {
-        directorGroup.classList.remove('hidden');
-        directorInput.setAttribute('required', 'true');
-        
-        if(tipo === 'estoque') {
-            lblDirector.innerText = 'Observação (Ex: Saldo Inicial)';
-            directorInput.placeholder = 'Descrição da entrada...';
-        } else if (tipo === 'defeito') {
-            lblDirector.innerText = 'Motivo do Defeito';
-            directorInput.placeholder = 'Ex: Rasgou, falha no fecho...';
+if(paymentType) {
+    paymentType.addEventListener('change', (e) => {
+        const tipo = e.target.value;
+        if(tipo === 'cortesia' || tipo === 'estoque' || tipo === 'defeito') {
+            directorGroup.classList.remove('hidden');
+            directorInput.setAttribute('required', 'true');
+            if(tipo === 'estoque') {
+                lblDirector.innerText = 'Observação (Ex: Saldo Inicial)';
+                directorInput.placeholder = 'Descrição da entrada...';
+            } else if (tipo === 'defeito') {
+                lblDirector.innerText = 'Motivo do Defeito';
+                directorInput.placeholder = 'Ex: Rasgou, falha no fecho...';
+            } else {
+                lblDirector.innerText = 'Nome do Diretor';
+                directorInput.placeholder = 'Quem liberou?';
+            }
         } else {
-            lblDirector.innerText = 'Nome do Diretor';
-            directorInput.placeholder = 'Quem liberou?';
+            directorGroup.classList.add('hidden');
+            directorInput.removeAttribute('required');
+            directorInput.value = '';
         }
-    } else {
-        directorGroup.classList.add('hidden');
-        directorInput.removeAttribute('required');
-        directorInput.value = '';
-    }
-});
+    });
+}
 
-// --- 4. FUNÇÃO SALVAR (CRIAR OU EDITAR) ---
-salesForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+// --- 4. FUNÇÃO SALVAR ---
+if(salesForm) {
+    salesForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-    const date = document.getElementById('dateInput').value;
-    const qtdA = parseInt(qtdAdultoInput.value) || 0;
-    const qtdI = parseInt(qtdInfantilInput.value) || 0;
-    const type = paymentType.value;
-    const director = directorInput.value;
-    const idToEdit = editIdInput.value;
+        const date = document.getElementById('dateInput').value;
+        const qtdA = parseInt(qtdAdultoInput.value) || 0;
+        const qtdI = parseInt(qtdInfantilInput.value) || 0;
+        const type = paymentType.value;
+        const director = directorInput.value;
+        const idToEdit = editIdInput.value;
 
-    if(qtdA === 0 && qtdI === 0) {
-        alert("Por favor, preencha a quantidade de pelo menos um tipo de pulseira.");
-        return;
-    }
-
-    const dados = {
-        data: date,
-        qtdAdulto: qtdA,
-        qtdInfantil: qtdI,
-        tipo: type,
-        diretor: (['cortesia', 'estoque', 'defeito'].includes(type)) ? director : null,
-        created_at: new Date()
-    };
-
-    try {
-        if (idToEdit) {
-            await updateDoc(doc(db, "vendas", idToEdit), dados);
-            alert("Registro atualizado com sucesso!");
-            resetFormMode();
-        } else {
-            await addDoc(collection(db, "vendas"), dados);
-            alert("Registro salvo com sucesso!");
-            resetFormMode();
+        if(qtdA === 0 && qtdI === 0) {
+            alert("Preencha a quantidade.");
+            return;
         }
-        
-        carregarResumo(dateStart.value, dateEnd.value);
-        calcularEstoqueGeral();
 
-    } catch (error) {
-        console.error("Erro ao salvar: ", error);
-        alert("Erro ao processar a solicitação.");
-    }
-});
+        const dados = {
+            data: date,
+            qtdAdulto: qtdA,
+            qtdInfantil: qtdI,
+            tipo: type,
+            diretor: (['cortesia', 'estoque', 'defeito'].includes(type)) ? director : null,
+            created_at: new Date()
+        };
+
+        try {
+            if (idToEdit) {
+                await updateDoc(doc(db, "vendas", idToEdit), dados);
+                alert("Atualizado com sucesso!");
+            } else {
+                await addDoc(collection(db, "vendas"), dados);
+                alert("Registrado com sucesso!");
+            }
+            resetFormMode();
+            carregarResumo(dateStart.value, dateEnd.value);
+            calcularEstoqueGeral();
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao salvar.");
+        }
+    });
+}
 
 function resetFormMode() {
     salesForm.reset();
@@ -142,20 +132,20 @@ function resetFormMode() {
     qtdInfantilInput.value = 0;
 }
 
-btnCancelEdit.addEventListener('click', resetFormMode);
+if(btnCancelEdit) btnCancelEdit.addEventListener('click', resetFormMode);
 
 // --- 5. CÁLCULO DE ESTOQUE (COM ANTERIOR E ATUAL) ---
 async function calcularEstoqueGeral() {
     let saldoA = 0;
     let saldoI = 0;
     
-    // Variáveis para guardar o "Estoque Anterior/Inicial" (Base do cálculo)
+    // Variáveis para guardar o "Estoque Anterior/Inicial"
     let saldoInicialA = 0;
     let saldoInicialI = 0;
 
     let dataCorte = "2000-01-01"; 
 
-    // 1. Busca se existe um Fechamento (Arquivo) anterior
+    // 1. Busca último fechamento (que agora será o de 30/11)
     try {
         const qFechamento = query(collection(db, "fechamentos"), orderBy("data", "desc"), limit(1));
         const snapshotFechamento = await getDocs(qFechamento);
@@ -163,18 +153,17 @@ async function calcularEstoqueGeral() {
         if (!snapshotFechamento.empty) {
             const fechamento = snapshotFechamento.docs[0].data();
             
-            // Define o saldo inicial baseado no arquivo
             saldoInicialA = fechamento.saldoAdulto;
             saldoInicialI = fechamento.saldoInfantil;
             
-            // O saldo corrente começa igual ao inicial
+            // O saldo começa igual ao inicial
             saldoA = saldoInicialA;
             saldoI = saldoInicialI;
             
             dataCorte = fechamento.data;
         }
     } catch (e) {
-        console.log("Nenhum fechamento anterior encontrado, calculando do zero.");
+        console.log("Sem fechamento anterior.");
     }
 
     // 2. Busca apenas as vendas DEPOIS da data de corte
@@ -187,46 +176,48 @@ async function calcularEstoqueGeral() {
         const valI = item.qtdInfantil || 0;
 
         if (item.tipo === 'estoque') {
-            // Se for entrada manual, soma ao ATUAL apenas
             saldoA += valA;
             saldoI += valI;
         } else {
-            // Vendas diminuem o atual
             saldoA -= valA;
             saldoI -= valI;
         }
     });
 
-    // 3. Atualiza a tela (ATUAL)
+    // 3. Atualiza a tela (Elementos precisam existir)
     const elA = document.getElementById('stockAdulto');
     const elI = document.getElementById('stockInfantil');
-    elA.innerText = saldoA;
-    elI.innerText = saldoI;
+    
+    if(elA && elI) {
+        elA.innerText = saldoA;
+        elI.innerText = saldoI;
 
-    // 4. Atualiza a tela (ANTERIOR / INICIAL)
-    document.getElementById('stockAdultoIni').innerText = saldoInicialA;
-    document.getElementById('stockInfantilIni').innerText = saldoInicialI;
+        // Saldo Anterior
+        const elIniA = document.getElementById('stockAdultoIni');
+        const elIniI = document.getElementById('stockInfantilIni');
+        if(elIniA) elIniA.innerText = saldoInicialA;
+        if(elIniI) elIniI.innerText = saldoInicialI;
 
-    // Lógica de Alerta Visual
-    if(saldoA <= LIMITE_ALERTA) cardPanelAdulto.classList.add('low-stock-alert');
-    else cardPanelAdulto.classList.remove('low-stock-alert');
+        // Cores e Alertas
+        elA.style.color = saldoA < 0 ? '#ef4444' : (saldoA <= LIMITE_ALERTA ? '#ef4444' : '#10b981');
+        elI.style.color = saldoI < 0 ? '#ef4444' : (saldoI <= LIMITE_ALERTA ? '#ef4444' : '#3b82f6');
+        
+        if(saldoA <= LIMITE_ALERTA) cardPanelAdulto.classList.add('low-stock-alert');
+        else cardPanelAdulto.classList.remove('low-stock-alert');
 
-    if(saldoI <= LIMITE_ALERTA) cardPanelInfantil.classList.add('low-stock-alert');
-    else cardPanelInfantil.classList.remove('low-stock-alert');
-
-    // Cores do Texto
-    elA.style.color = saldoA < 0 ? '#ef4444' : (saldoA <= LIMITE_ALERTA ? '#ef4444' : '#10b981');
-    elI.style.color = saldoI < 0 ? '#ef4444' : (saldoI <= LIMITE_ALERTA ? '#ef4444' : '#3b82f6');
+        if(saldoI <= LIMITE_ALERTA) cardPanelInfantil.classList.add('low-stock-alert');
+        else cardPanelInfantil.classList.remove('low-stock-alert');
+    }
 }
 
-// --- 6. FUNÇÃO PARA CONSOLIDAR (ARQUIVAR) ESTOQUE ---
+// --- 6. FUNÇÃO CONSOLIDAR (Volta ao modo normal) ---
 if(btnFecharCaixa) {
     btnFecharCaixa.addEventListener('click', async () => {
         const elA = document.getElementById('stockAdulto').innerText;
         const elI = document.getElementById('stockInfantil').innerText;
         const dataHoje = new Date().toISOString().split('T')[0];
 
-        if(!confirm(`ATENÇÃO: Você deseja consolidar o estoque na data de HOJE (${dataHoje})?\n\nSaldo Atual que será salvo:\nAdulto: ${elA}\nInfantil: ${elI}\n\nIsso atualizará o "Estoque Anterior" para estes valores a partir de agora.`)) {
+        if(!confirm(`Deseja fechar o caixa HOJE (${dataHoje})?\nIsso atualizará o Saldo Anterior para: A:${elA} / I:${elI}`)) {
             return;
         }
 
@@ -237,99 +228,69 @@ if(btnFecharCaixa) {
                 saldoInfantil: parseInt(elI),
                 criadoEm: new Date()
             });
-            alert("Estoque consolidado com sucesso! Arquivo criado.");
+            alert("Fechamento realizado com sucesso!");
             location.reload(); 
         } catch (e) {
             console.error(e);
-            alert("Erro ao consolidar estoque.");
+            alert("Erro ao fechar caixa.");
         }
     });
 }
 
-// --- 7. EXPORTAR PARA EXCEL (CSV) ---
+// --- 7. EXPORTAR PARA EXCEL ---
 if(btnExcel) {
     btnExcel.addEventListener('click', async () => {
         const inicio = dateStart.value;
         const fim = dateEnd.value;
         
-        const q = query(
-            collection(db, "vendas"), 
-            where("data", ">=", inicio), 
-            where("data", "<=", fim), 
-            orderBy("data", "desc")
-        );
+        const q = query(collection(db, "vendas"), where("data", ">=", inicio), where("data", "<=", fim), orderBy("data", "desc"));
         const querySnapshot = await getDocs(q);
 
-        let csv = "DATA;TIPO;QTD ADULTO;QTD INFANTIL;DETALHE;DIRETOR/OBS\n";
-        
+        let csv = "DATA;TIPO;QTD ADULTO;QTD INFANTIL;DETALHE;DIRETOR\n";
         querySnapshot.forEach((doc) => {
             const item = doc.data();
             const dataF = item.data.split('-').reverse().join('/');
-            const tipo = item.tipo.toUpperCase();
             const obs = (item.diretor || '').replace(/;/g, ' ');
-            
-            csv += `${dataF};${tipo};${item.qtdAdulto||0};${item.qtdInfantil||0};${tipo};${obs}\n`;
+            csv += `${dataF};${item.tipo};${item.qtdAdulto||0};${item.qtdInfantil||0};${item.tipo};${obs}\n`;
         });
 
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.href = url;
-        link.download = `relatorio_pulseiras_${inicio}_ate_${fim}.csv`;
+        link.href = URL.createObjectURL(blob);
+        link.download = `relatorio_${inicio}_${fim}.csv`;
         link.click();
     });
 }
 
 // --- 8. RELATÓRIO E TABELAS ---
 async function carregarResumo(inicio, fim) {
-    const dataInicioF = inicio.split('-').reverse().join('/');
-    const dataFimF = fim.split('-').reverse().join('/');
-    printPeriod.innerText = `Período: ${dataInicioF} até ${dataFimF}`;
+    if(printPeriod) printPeriod.innerText = `Período: ${inicio.split('-').reverse().join('/')} até ${fim.split('-').reverse().join('/')}`;
 
-    const q = query(
-        collection(db, "vendas"), 
-        where("data", ">=", inicio), 
-        where("data", "<=", fim), 
-        orderBy("data", "desc")
-    );
-    
+    const q = query(collection(db, "vendas"), where("data", ">=", inicio), where("data", "<=", fim), orderBy("data", "desc"));
     const querySnapshot = await getDocs(q);
 
-    let totais = { 
-        dinheiro: { a: 0, i: 0 }, 
-        cartao:   { a: 0, i: 0 }, 
-        pix:      { a: 0, i: 0 }, 
-        cortesia: { a: 0, i: 0 },
-        defeito:  { a: 0, i: 0 }
-    };
+    let totais = { dinheiro: {a:0,i:0}, cartao: {a:0,i:0}, pix: {a:0,i:0}, cortesia: {a:0,i:0}, defeito: {a:0,i:0} };
+    let totalGlobalA = 0, totalGlobalI = 0;
+    let lista = [];
 
-    let totalGlobalA = 0; 
-    let totalGlobalI = 0;
-    let listaVendas = [];
-
-    querySnapshot.forEach((doc) => {
-        listaVendas.push({ id: doc.id, ...doc.data() });
-    });
-
-    listaVendas.sort((a, b) => {
+    querySnapshot.forEach((doc) => lista.push({id: doc.id, ...doc.data()}));
+    
+    // Ordenação
+    lista.sort((a, b) => {
         if (a.tipo === 'estoque' && b.tipo !== 'estoque') return -1;
         if (b.tipo === 'estoque' && a.tipo !== 'estoque') return 1;
         return 0;
     });
 
-    tbodyAdulto.innerHTML = ''; 
-    tbodyInfantil.innerHTML = '';
+    if(tbodyAdulto) tbodyAdulto.innerHTML = ''; 
+    if(tbodyInfantil) tbodyInfantil.innerHTML = '';
 
-    listaVendas.forEach((item) => {
-        const dataFormatada = item.data.split('-').reverse().slice(0, 2).join('/');
+    lista.forEach((item) => {
         const qtdA = item.qtdAdulto || 0;
         const qtdI = item.qtdInfantil || 0;
         
         if (item.tipo !== 'estoque') {
-            if (totais[item.tipo]) {
-                totais[item.tipo].a += qtdA;
-                totais[item.tipo].i += qtdI;
-            }
+            if(totais[item.tipo]) { totais[item.tipo].a += qtdA; totais[item.tipo].i += qtdI; }
             totalGlobalA += qtdA; 
             totalGlobalI += qtdI;
         }
@@ -342,9 +303,8 @@ async function carregarResumo(inicio, fim) {
             rowColor = 'background-color: #dcfce7; font-weight: bold;';
             tipoLabel = '🟢 ENTRADA'; 
             detalhe = item.diretor || 'Manual';
-        } else if (item.tipo === 'cortesia') {
-            detalhe = `Lib: ${item.diretor}`;
-        } else if (item.tipo === 'defeito') {
+        } else if (item.tipo === 'cortesia') detalhe = `Lib: ${item.diretor}`;
+        else if (item.tipo === 'defeito') {
             rowColor = 'background-color: #fef2f2; color: #ef4444;';
             tipoLabel = '⚠️ DEFEITO'; 
             detalhe = item.diretor || 'Motivo n/d';
@@ -354,7 +314,7 @@ async function carregarResumo(inicio, fim) {
             const tr = document.createElement('tr');
             tr.style = rowColor;
             tr.innerHTML = `
-                <td>${dataFormatada}</td>
+                <td>${item.data.split('-').reverse().slice(0, 2).join('/')}</td>
                 <td>${tipoLabel}</td>
                 <td style="font-weight:bold; ${isInfantil ? 'color:#3b82f6':''}">${qtd}</td>
                 <td style="font-size:0.85em; color:#555">${detalhe}</td>
@@ -365,33 +325,29 @@ async function carregarResumo(inicio, fim) {
             return tr;
         };
 
-        if (qtdA > 0) tbodyAdulto.appendChild(createRow(qtdA, false));
-        if (qtdI > 0) tbodyInfantil.appendChild(createRow(qtdI, true));
+        if (tbodyAdulto && qtdA > 0) tbodyAdulto.appendChild(createRow(qtdA, false));
+        if (tbodyInfantil && qtdI > 0) tbodyInfantil.appendChild(createRow(qtdI, true));
     });
 
-    elGlobalAdulto.innerText = totalGlobalA; 
-    elGlobalInfantil.innerText = totalGlobalI; 
-    elGlobalTotal.innerText = totalGlobalA + totalGlobalI;
+    if(elGlobalAdulto) elGlobalAdulto.innerText = totalGlobalA; 
+    if(elGlobalInfantil) elGlobalInfantil.innerText = totalGlobalI; 
+    if(elGlobalTotal) elGlobalTotal.innerText = totalGlobalA + totalGlobalI;
 
     const renderStat = (d) => `
         <div class="stat-values">
-            <div class="stat-row">
-                <small>Adulto:</small><span class="val-adulto">${d.a}</span>
-            </div>
-            <div class="stat-row">
-                <small style="color:var(--info)">Infantil:</small><span class="val-infantil">${d.i}</span>
-            </div>
-            <div class="stat-row val-total">
-                <small>Total:</small><strong>${d.a + d.i}</strong>
-            </div>
+            <div class="stat-row"><small>A:</small><span class="val-adulto">${d.a}</span></div>
+            <div class="stat-row"><small style="color:var(--info)">I:</small><span class="val-infantil">${d.i}</span></div>
+            <div class="stat-row val-total"><small>Tot:</small><strong>${d.a + d.i}</strong></div>
         </div>`;
     
-    document.getElementById('resDinheiro').innerHTML = renderStat(totais.dinheiro);
-    document.getElementById('resCartao').innerHTML = renderStat(totais.cartao);
-    document.getElementById('resPix').innerHTML = renderStat(totais.pix);
-    document.getElementById('resCortesia').innerHTML = renderStat(totais.cortesia);
-    document.getElementById('resDefeito').innerHTML = renderStat(totais.defeito);
+    const setHtml = (id, content) => { if(document.getElementById(id)) document.getElementById(id).innerHTML = content; };
+    setHtml('resDinheiro', renderStat(totais.dinheiro));
+    setHtml('resCartao', renderStat(totais.cartao));
+    setHtml('resPix', renderStat(totais.pix));
+    setHtml('resCortesia', renderStat(totais.cortesia));
+    setHtml('resDefeito', renderStat(totais.defeito));
 
+    // Eventos de botões dinâmicos
     document.querySelectorAll('.btn-icon.delete').forEach(btn => {
         btn.addEventListener('click', async () => { 
             if(confirm("Deseja realmente excluir este registro?")) { 
@@ -404,7 +360,7 @@ async function carregarResumo(inicio, fim) {
 
     document.querySelectorAll('.btn-icon.edit').forEach(btn => {
         btn.addEventListener('click', () => { 
-            const item = listaVendas.find(v => v.id === btn.getAttribute('data-id'));
+            const item = lista.find(v => v.id === btn.getAttribute('data-id'));
             if(item) {
                 editIdInput.value = item.id; 
                 document.getElementById('dateInput').value = item.data;
@@ -423,9 +379,10 @@ async function carregarResumo(inicio, fim) {
     });
 }
 
-btnFilter.addEventListener('click', () => { 
+if(btnFilter) btnFilter.addEventListener('click', () => { 
     carregarResumo(dateStart.value, dateEnd.value); 
 });
 
+// INICIALIZAÇÃO
 calcularEstoqueGeral();
 carregarResumo(dateStart.value, dateEnd.value);
