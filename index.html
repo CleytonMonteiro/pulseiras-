@@ -22,7 +22,8 @@
                 <div class="stock-info">
                     <span class="material-icons-round">accessibility_new</span>
                     <div>
-                        <span>Estoque Adulto</span>
+                        <small class="stock-ini">Anterior: <span id="stockAdultoIni">0</span></small>
+                        <span>Estoque Atual</span>
                         <strong id="stockAdulto">---</strong>
                     </div>
                 </div>
@@ -32,6 +33,7 @@
                 <div class="stock-info">
                     <span class="material-icons-round">child_care</span>
                     <div>
+                        <small class="stock-ini" style="color: var(--info);">Anterior: <span id="stockInfantilIni">0</span></small>
                         <span>Estoque Infantil</span>
                         <strong id="stockInfantil">---</strong>
                     </div>
@@ -192,6 +194,6 @@
         </section>
     </div>
 
-    <script type="module" src="app.js?v=11"></script>
+    <script type="module" src="app.js?v=12"></script>
 </body>
 </html>

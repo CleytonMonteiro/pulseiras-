@@ -23,7 +23,7 @@ body {
     justify-content: center;
 }
 
-.container { width: 100%; max-width: 700px; } /* Largura aumentada para caber botões laterais */
+.container { width: 100%; max-width: 700px; }
 
 header { text-align: center; margin-bottom: 20px; }
 h1 { margin: 0; font-size: 1.8rem; }
@@ -47,7 +47,7 @@ p { color: var(--text-light); margin-top: 5px; }
     gap: 15px;
     margin-bottom: 20px;
     position: relative;
-    align-items: center; /* Centraliza verticalmente com os botões */
+    align-items: center; 
 }
 
 .stock-card {
@@ -62,6 +62,15 @@ p { color: var(--text-light); margin-top: 5px; }
     border: 2px solid transparent;
 }
 .stock-card.secondary { background: #ffffff; color: var(--text); border: 2px solid #e5e7eb; }
+
+/* Novo estilo para o rótulo de estoque anterior */
+.stock-ini {
+    display: block;
+    font-size: 0.75rem;
+    opacity: 0.8;
+    margin-bottom: 2px;
+    font-weight: 500;
+}
 
 /* Animação Alerta */
 @keyframes alertPulse {
@@ -80,7 +89,7 @@ p { color: var(--text-light); margin-top: 5px; }
 .stock-info span { font-size: 0.8rem; opacity: 0.8; }
 .stock-info strong { font-size: 1.3rem; }
 
-/* PAINEL LATERAL DE BOTÕES (Imprimir, Excel, Fechar) */
+/* PAINEL LATERAL DE BOTÕES */
 .action-panel {
     display: flex;
     flex-direction: column;
@@ -96,7 +105,7 @@ p { color: var(--text-light); margin-top: 5px; }
     transition: 0.2s;
 }
 .btn-circle:hover { transform: scale(1.1); background: #f9fafb; }
-.btn-circle.warning { color: var(--warning); } /* Botão arquivar */
+.btn-circle.warning { color: var(--warning); } 
 
 
 /* INPUTS */
@@ -138,7 +147,7 @@ input:focus, select:focus { border-color: var(--primary); outline: none; box-sha
     background: #f9fafb; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #e5e7eb;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
-.stat-box.warning { border-color: var(--warning); background: #fffbeb; } /* Estilo Defeito */
+.stat-box.warning { border-color: var(--warning); background: #fffbeb; } 
 .stat-box span.material-icons-round { font-size: 24px; color: var(--text-light); margin-bottom: 5px; }
 .stat-box.warning span.material-icons-round { color: var(--warning); }
 .stat-box p { 
@@ -192,6 +201,9 @@ td { padding: 10px 5px; border-bottom: 1px solid #e5e7eb; vertical-align: middle
     .stock-info span.material-icons-round { display: none; }
     .stock-info strong { font-size: 12pt; color: black !important; }
     .stock-info span { font-size: 9pt; color: black; opacity: 1; }
+    
+    /* Ajusta o novo rótulo na impressão */
+    .stock-ini { color: black !important; font-size: 8pt; opacity: 1; margin-bottom: 0; }
     
     .summary-bar { border: 1px solid #000; background: none; margin-bottom: 15px; }
     .sum-item span { color: black; }
